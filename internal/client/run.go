@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/aquasecurity/trivy/internal/client/config"
 	"github.com/aquasecurity/trivy/pkg/cache"
@@ -82,7 +84,17 @@ func run(c config.Config) (err error) {
 			c.Severities, c.IgnoreUnfixed, c.IgnoreFile)
 	}
 
-	if err = report.WriteResults(c.Format, c.Output, results, c.Template, false); err != nil {
+	template := c.Template
+
+	if strings.HasPrefix(c.Template, "@") {
+		buf, err := ioutil.ReadFile(strings.TrimPrefix(c.Template, "@"))
+		if err != nil {
+			return xerrors.Errorf("Error retrieving template from path: %w", err)
+		}
+		template = string(buf)
+	}
+
+	if err = report.WriteResults(c.Format, c.Output, results, template, false); err != nil {
 		return xerrors.Errorf("unable to write results: %w", err)
 	}
 

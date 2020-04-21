@@ -92,6 +92,10 @@ func (s Scanner) ScanImage(options types.ScanOptions) (report.Results, error) {
 
 	results, osFound, eosl, err := s.driver.Scan(imageInfo.Name, imageInfo.ID, imageInfo.LayerIDs, options)
 	if err != nil {
+		if osFound == nil {
+			log.Logger.Warn("Unsupported OS")
+			return nil, nil
+		}
 		return nil, xerrors.Errorf("scan failed: %w", err)
 	}
 	if eosl {
